@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Work Attendance</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .box {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .box h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .box p {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .calendar-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .month-header button {
+            border: none;
+            background: #2563eb;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .month-header button:hover {
+            background: #1d4ed8;
+        }
+
+        #monthYear {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .weekdays,
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: bold;
+            color: #6b7280;
+            padding: 10px;
+        }
+
+        .day {
+            min-height: 75px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px;
+            cursor: pointer;
+            position: relative;
+            background: #fff;
+        }
+
+        .day:hover {
+            border-color: #2563eb;
+        }
+
+        .day-number {
+            font-weight: bold;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 7px;
+            left: 7px;
+            right: 7px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px;
+            border-radius: 5px;
+        }
+
+        .present {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .absent {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .leave {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .empty {
+            border: none;
+            cursor: default;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend span {
+            font-size: 14px;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .green {
+            background: #22c55e;
+        }
+
+        .red {
+            background: #ef4444;
+        }
+
+        .yellow {
+            background: #f59e0b;
+        }
+
+        @media (max-width: 600px) {
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .day {
+                min-height: 60px;
+            }
+
+            .status {
+                font-size: 9px;
+            }
+
+            .weekday {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Work Attendance</h1>
+
+    <div class="summary">
+
+        <div class="box">
+            <h3>Present</h3>
+            <p id="presentCount">0</p>
+        </div>
+
+        <div class="box">
+            <h3>Absent</h3>
+            <p id="absentCount">0</p>
+        </div>
+
+        <div class="box">
+            <h3>Leave</h3>
+            <p id="leaveCount">0</p>
+        </div>
+
+        <div class="box">
+            <h3>Attendance</h3>
+            <p id="attendancePercentage">0%</p>
+        </div>
+
+    </div>
+
+    <div class="calendar-box">
+
+        <div class="month-header">
+
+            <button onclick="previousMonth()">←</button>
+
+            <div id="monthYear"></div>
+
+            <button onclick="nextMonth()">→</button>
+
+        </div>
+
+        <div class="weekdays">
+
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+            <div class="weekday">Sun</div>
+
+        </div>
+
+        <div class="calendar" id="calendar"></div>
+
+        <div class="legend">
+
+            <span>
+                <span class="dot green"></span>
+                Present
+            </span>
+
+            <span>
+                <span class="dot red"></span>
+                Absent
+            </span>
+
+            <span>
+                <span class="dot yellow"></span>
+                Leave
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    let currentDate = new Date();
+
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+
+    let attendance = JSON.parse(
+        localStorage.getItem("workAttendance")
+    ) || {};
+
+
+    function getDateKey(year, month, day) {
+
+        return year + "-" +
+               String(month + 1).padStart(2, "0") + "-" +
+               String(day).padStart(2, "0");
+
+    }
+
+
+    function loadCalendar() {
+
+        const calendar = document.getElementById("calendar");
+
+        calendar.innerHTML = "";
+
+        const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ];
+
+        document.getElementById("monthYear").innerText =
+            monthNames[currentMonth] + " " + currentYear;
+
+
+        /*
+            JavaScript Sunday = 0
+            We want Monday = 0
+        */
+
+        let firstDay =
+            new Date(currentYear, currentMonth, 1).getDay();
+
+        firstDay = (firstDay + 6) % 7;
+
+
+        let daysInMonth =
+            new Date(currentYear, currentMonth + 1, 0).getDate();
+
+
+        // Empty spaces before first day
+
+        for (let i = 0; i < firstDay; i++) {
+
+            const empty = document.createElement("div");
+
+            empty.className = "day empty";
+
+            calendar.appendChild(empty);
+
+        }
+
+
+        // Create days
+
+        for (let day = 1; day <= daysInMonth; day++) {
+
+            const dateKey =
+                getDateKey(currentYear, currentMonth, day);
+
+            const dayElement =
+                document.createElement("div");
+
+            dayElement.className = "day";
+
+
+            const number =
+                document.createElement("div");
+
+            number.className = "day-number";
+
+            number.innerText = day;
+
+
+            dayElement.appendChild(number);
+
+
+            let currentStatus = attendance[dateKey];
+
+
+            if (currentStatus) {
+
+                const status =
+                    document.createElement("div");
+
+                status.className =
+                    "status " + currentStatus;
+
+                status.innerText =
+                    currentStatus.charAt(0).toUpperCase() +
+                    currentStatus.slice(1);
+
+                dayElement.appendChild(status);
+
+            }
+
+
+            dayElement.onclick = function () {
+
+                changeStatus(dateKey);
+
+            };
+
+
+            calendar.appendChild(dayElement);
+
+        }
+
+
+        updateSummary();
+
+    }
+
+
+    function changeStatus(dateKey) {
+
+        let currentStatus = attendance[dateKey];
+
+
+        if (!currentStatus) {
+
+            attendance[dateKey] = "present";
+
+        }
+
+        else if (currentStatus === "present") {
+
+            attendance[dateKey] = "absent";
+
+        }
+
+        else if (currentStatus === "absent") {
+
+            attendance[dateKey] = "leave";
+
+        }
+
+        else if (currentStatus === "leave") {
+
+            delete attendance[dateKey];
+
+        }
+
+
+        localStorage.setItem(
+            "workAttendance",
+            JSON.stringify(attendance)
+        );
+
+
+        loadCalendar();
+
+    }
+
+
+    function updateSummary() {
+
+        let present = 0;
+        let absent = 0;
+        let leave = 0;
+
+
+        for (let date in attendance) {
+
+            let dateObject = new Date(date);
+
+            if (
+                dateObject.getMonth() === currentMonth &&
+                dateObject.getFullYear() === currentYear
+            ) {
+
+                if (attendance[date] === "present") {
+                    present++;
+                }
+
+                else if (attendance[date] === "absent") {
+                    absent++;
+                }
+
+                else if (attendance[date] === "leave") {
+                    leave++;
+                }
+
+            }
+
+        }
+
+
+        let workingDays = present + absent;
+
+
+        let percentage = 0;
+
+        if (workingDays > 0) {
+
+            percentage =
+                ((present / workingDays) * 100).toFixed(1);
+
+        }
+
+
+        document.getElementById("presentCount").innerText =
+            present;
+
+        document.getElementById("absentCount").innerText =
+            absent;
+
+        document.getElementById("leaveCount").innerText =
+            leave;
+
+        document.getElementById("attendancePercentage").innerText =
+            percentage + "%";
+
+    }
+
+
+    function previousMonth() {
+
+        currentMonth--;
+
+        if (currentMonth < 0) {
+
+            currentMonth = 11;
+            currentYear--;
+
+        }
+
+        loadCalendar();
+
+    }
+
+
+    function nextMonth() {
+
+        currentMonth++;
+
+        if (currentMonth > 11) {
+
+            currentMonth = 0;
+            currentYear++;
+
+        }
+
+        loadCalendar();
+
+    }
+
+
+    loadCalendar();
+
+</script>
+
+</body>
+</html>
